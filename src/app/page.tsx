@@ -25,35 +25,70 @@ export default function Home() {
     setDishImages({});
     setError(null);
 
-    const reader = new FileReader();
-    reader.onloadend = async () => {
-      const base64Image = reader.result as string;
+    // Resize and optimize image before sending (limit to 800px width/height)
+    // This prevents payload too large errors and speeds up upload
+    const resizeImage = (file: File): Promise<string> => {
+      return new Promise((resolve) => {
+        const img = document.createElement("img");
+        img.src = URL.createObjectURL(file);
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          let width = img.width;
+          let height = img.height;
+          const MAX_SIZE = 800;
 
-      try {
-        const res = await fetch("/api/analyze", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ image: base64Image }),
-        });
+          if (width > height) {
+            if (width > MAX_SIZE) {
+              height *= MAX_SIZE / width;
+              width = MAX_SIZE;
+            }
+          } else {
+            if (height > MAX_SIZE) {
+              width *= MAX_SIZE / height;
+              height = MAX_SIZE;
+            }
+          }
 
-        if (!res.ok) throw new Error("Analysis failed");
-
-        const data = await res.json();
-
-        if (data.dishes) {
-          setResults(data.dishes);
-          fetchImagesInParallel(data.dishes);
-        } else {
-          throw new Error("No dishes found");
-        }
-      } catch (err) {
-        console.error("Failed to analyze", err);
-        setError("Could not analyze the menu. Please try again with a clearer photo.");
-      } finally {
-        setAnalyzing(false);
-      }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          ctx?.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL("image/jpeg", 0.7)); // Compress to JPEG 70%
+        };
+      });
     };
-    reader.readAsDataURL(file);
+
+    try {
+      // Create preview immediately for UI responsiveness if needed, but we rely on scanning animation
+      const compressedParams = await resizeImage(file);
+
+      const res = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: compressedParams }),
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error("API Error details:", errorText);
+        throw new Error(`Analysis failed: ${res.status} ${res.statusText}`);
+      }
+
+      const data = await res.json();
+
+      if (data.dishes) {
+        setResults(data.dishes);
+        fetchImagesInParallel(data.dishes);
+      } else {
+        throw new Error("No dishes found");
+      }
+    } catch (err) {
+      console.error("Failed to analyze", err);
+      // More specific error message
+      setError("Analysis failed. Please check if the API Key is set in Vercel settings, or try a smaller image.");
+    } finally {
+      setAnalyzing(false);
+    }
   };
 
   const fetchImagesInParallel = async (dishes: Dish[]) => {
