@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
 
@@ -12,9 +12,25 @@ const outfit = Outfit({
   subsets: ["latin"],
 });
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: "#050505",
+};
+
 export const metadata: Metadata = {
   title: "menumenu | Visual Graphic Menu",
   description: "Translate and Visualize Menus Instantly",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "menumenu",
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export default function RootLayout({
