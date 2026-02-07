@@ -3,9 +3,10 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { z } from "zod";
 
 // Initialize OpenAI client
+// Initialize OpenAI client
 // In a real scenario, API keys should be in environment variables
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" }); // Using 1.5 Pro for better reasoning
+const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" }); // Use the latest available Flash model
 
 // Define the schema for the menu structure
 // This helps the LLM understand what JSON format we expect
@@ -24,6 +25,7 @@ const MenuSchema = z.object({
 });
 
 export async function POST(req: Request) {
+    console.log("Analyze API Request Received");
     try {
         const { image } = await req.json();
 
@@ -32,7 +34,9 @@ export async function POST(req: Request) {
         }
 
         // Remove the data URL prefix if present (e.g., "data:image/jpeg;base64,")
-        const base64Data = image.split(",")[1] || image;
+        // Also remove any whitespace/newlines to ensure valid Base64
+        const rawBase64 = image.split(",")[1] || image;
+        const base64Data = rawBase64.replace(/\s/g, "");
 
         const prompt = `
     You are a "Visual Culinary Curator". 
@@ -83,7 +87,8 @@ export async function POST(req: Request) {
         return new Response(JSON.stringify(data));
 
     } catch (error) {
-        console.error("Gemini Error:", error);
-        return new Response(JSON.stringify({ error: "Failed to process menu" }), { status: 500 });
+        // Detailed error logging
+        console.error("Gemini API Error Detail:", JSON.stringify(error, Object.getOwnPropertyNames(error)));
+        return new Response(JSON.stringify({ error: "Failed to process menu. Please try again." }), { status: 500 });
     }
 }
