@@ -16,46 +16,60 @@ export async function POST(req: Request) {
         }
 
         // 1. Google Custom Search (Priority)
-        const googleKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY; // Fallback to Gemini key if explicit Google key is missing, as they often share quota
+        const googleKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
         const googleCx = process.env.GOOGLE_CSE_ID;
 
         if (googleKey && googleCx) {
             // console.log(`Searching Google for: ${query}`);
             const googleUrl = `https://customsearch.googleapis.com/customsearch/v1?key=${googleKey}&cx=${googleCx}&q=${encodeURIComponent(query)}&searchType=image&num=1&safe=active`;
 
-            const googleRes = await fetch(googleUrl);
-            const googleData = await googleRes.json();
+            try {
+                const googleRes = await fetch(googleUrl);
 
-            if (googleData.items && googleData.items.length > 0) {
-                const item = googleData.items[0];
-                return new Response(JSON.stringify({
-                    imageUrl: item.link,
-                    credit: { name: "Google", link: item.contextLink || item.link }
-                }));
+                if (!googleRes.ok) {
+                    const errText = await googleRes.text();
+                    console.error("Google Search API Error:", googleRes.status, errText);
+                    // Fall through to Unsplash
+                } else {
+                    const googleData = await googleRes.json();
+                    if (googleData.items && googleData.items.length > 0) {
+                        const item = googleData.items[0];
+                        return new Response(JSON.stringify({
+                            imageUrl: item.link,
+                            credit: { name: "Google", link: item.contextLink || item.link }
+                        }));
+                    }
+                }
+            } catch (gErr) {
+                console.error("Google Fetch Error:", gErr);
+                // Fall through to Unsplash
             }
-            // If Google returns nothing, fall through to Unsplash? Or just return empty?
-            // Let's fall through if Google fails to find anything.
         }
 
         // 2. Unsplash (Fallback)
         // console.log(`Falling back to Unsplash for: ${query}`);
-        const result = await unsplash.search.getPhotos({
-            query: query,
-            page: 1,
-            perPage: 1,
-            orientation: 'landscape'
-        });
+        try {
+            const result = await unsplash.search.getPhotos({
+                query: query,
+                page: 1,
+                perPage: 1,
+                orientation: 'landscape'
+            });
 
-        if (result.type === 'error') {
-            console.error("Unsplash Error:", result.errors);
-            return new Response(JSON.stringify({ error: "Unsplash API error" }), { status: 500 });
+            if (result.type === 'error') {
+                console.error("Unsplash Error:", result.errors);
+                return new Response(JSON.stringify({ error: "Unsplash API error" }), { status: 500 });
+            }
+
+            const photo = result.response?.results[0];
+            const imageUrl = photo ? photo.urls.regular : null;
+            const credit = photo ? { name: photo.user.name, link: photo.user.links.html } : null;
+
+            return new Response(JSON.stringify({ imageUrl, credit }));
+        } catch (uErr) {
+            console.error("Unsplash Fetch Error:", uErr);
+            return new Response(JSON.stringify({ error: "Unsplash client error" }), { status: 500 });
         }
-
-        const photo = result.response?.results[0];
-        const imageUrl = photo ? photo.urls.regular : null;
-        const credit = photo ? { name: photo.user.name, link: photo.user.links.html } : null;
-
-        return new Response(JSON.stringify({ imageUrl, credit }));
 
     } catch (error) {
         console.error("Search API Error:", error);
