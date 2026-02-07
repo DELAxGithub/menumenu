@@ -32,6 +32,7 @@ export default function TestToolPage() {
 
                 // Fetch images for dishes if analysis succeeded
                 if (data.dishes) {
+                    console.log("Starting image fetch for dishes...", data.dishes);
                     const dishesWithImages = await Promise.all(data.dishes.map(async (dish: any) => {
                         try {
                             const imgRes = await fetch("/api/search-image", {
@@ -39,18 +40,20 @@ export default function TestToolPage() {
                                 headers: { "Content-Type": "application/json" },
                                 body: JSON.stringify({ query: dish.searchQuery }),
                             });
+                            if (!imgRes.ok) throw new Error("API Returned Error");
                             const imgData = await imgRes.json();
-                            return { ...dish, imageUrl: imgData.imageUrl };
+                            console.log("Fetched image for", dish.translatedName, imgData.imageUrl);
+                            return { ...dish, imageUrl: imgData.imageUrl, credit: imgData.credit };
                         } catch (e) {
-                            console.error("Image fetch failed for", dish.translatedName);
-                            return dish;
+                            console.error("Image fetch failed for", dish.translatedName, e);
+                            return { ...dish, imageError: "Fetch failed" };
                         }
                     }));
                     setResult({ ...data, dishes: dishesWithImages });
                 } else {
+                    console.log("No dishes found to fetch images for.");
                     setResult(data);
                 }
-
             } catch (error) {
                 console.error("Test Error:", error);
                 setResult({ error: "Failed to analyze" });

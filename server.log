@@ -1,0 +1,29 @@
+
+> menumenu@0.1.0 dev
+> next dev
+
+▲ Next.js 16.1.6 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.41:3000
+- Environments: .env.local, .env
+
+✓ Starting...
+✓ Ready in 334ms
+ GET /test-tool 200 in 294ms (compile: 178ms, render: 116ms)
+ GET /test-tool 200 in 57ms (compile: 3ms, render: 54ms)
+Analyze API Request Received
+ POST /api/analyze 200 in 36.5s (compile: 57ms, render: 36.4s)
+ POST /api/search-image 200 in 1010ms (compile: 37ms, render: 973ms)
+ POST /api/search-image 200 in 1012ms (compile: 39ms, render: 973ms)
+ POST /api/search-image 200 in 1013ms (compile: 29ms, render: 984ms)
+ POST /api/search-image 200 in 1083ms (compile: 44ms, render: 1039ms)
+ POST /api/search-image 200 in 1157ms (compile: 34ms, render: 1123ms)
+ POST /api/search-image 200 in 139ms (compile: 1454µs, render: 137ms)
+ POST /api/search-image 200 in 1431ms (compile: 48ms, render: 1383ms)
+ POST /api/search-image 200 in 616ms (compile: 3ms, render: 613ms)
+ POST /api/search-image 200 in 652ms (compile: 6ms, render: 646ms)
+ POST /api/search-image 200 in 656ms (compile: 1745µs, render: 655ms)
+ POST /api/search-image 200 in 717ms (compile: 667µs, render: 716ms)
+ POST /api/search-image 200 in 627ms (compile: 1364µs, render: 626ms)
+ POST /api/search-image 200 in 626ms (compile: 1244µs, render: 625ms)
+✓ Compiled in 7ms
