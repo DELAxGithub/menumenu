@@ -6,7 +6,7 @@ import { z } from "zod";
 // Initialize OpenAI client
 // In a real scenario, API keys should be in environment variables
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
-const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" }); // Use the latest available Flash model
+const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" }); // Use the latest available Flash model (2.0)
 
 // Define the schema for the menu structure
 // This helps the LLM understand what JSON format we expect
