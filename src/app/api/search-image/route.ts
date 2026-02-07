@@ -15,12 +15,35 @@ export async function POST(req: Request) {
             return new Response(JSON.stringify({ error: "No query provided" }), { status: 400 });
         }
 
-        // Simplistic search: look for 1 best matching photo
+        // 1. Google Custom Search (Priority)
+        const googleKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY; // Fallback to Gemini key if explicit Google key is missing, as they often share quota
+        const googleCx = process.env.GOOGLE_CSE_ID;
+
+        if (googleKey && googleCx) {
+            // console.log(`Searching Google for: ${query}`);
+            const googleUrl = `https://customsearch.googleapis.com/customsearch/v1?key=${googleKey}&cx=${googleCx}&q=${encodeURIComponent(query)}&searchType=image&num=1&safe=active`;
+
+            const googleRes = await fetch(googleUrl);
+            const googleData = await googleRes.json();
+
+            if (googleData.items && googleData.items.length > 0) {
+                const item = googleData.items[0];
+                return new Response(JSON.stringify({
+                    imageUrl: item.link,
+                    credit: { name: "Google", link: item.contextLink || item.link }
+                }));
+            }
+            // If Google returns nothing, fall through to Unsplash? Or just return empty?
+            // Let's fall through if Google fails to find anything.
+        }
+
+        // 2. Unsplash (Fallback)
+        // console.log(`Falling back to Unsplash for: ${query}`);
         const result = await unsplash.search.getPhotos({
             query: query,
             page: 1,
             perPage: 1,
-            orientation: 'landscape' // Fits our card layout better
+            orientation: 'landscape'
         });
 
         if (result.type === 'error') {
@@ -29,8 +52,6 @@ export async function POST(req: Request) {
         }
 
         const photo = result.response?.results[0];
-
-        // Fallback if no photo found
         const imageUrl = photo ? photo.urls.regular : null;
         const credit = photo ? { name: photo.user.name, link: photo.user.links.html } : null;
 
