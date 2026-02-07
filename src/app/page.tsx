@@ -78,24 +78,26 @@ export default function Home() {
 
       if (data.dishes) {
         setResults(data.dishes);
+        // Fire and forget image fetching
         fetchImagesInParallel(data.dishes);
       } else {
         throw new Error("No dishes found");
       }
     } catch (err) {
       console.error("Failed to analyze", err);
-      // More specific error message
-      setError("Analysis failed. Please check if the API Key is set in Vercel settings, or try a smaller image.");
+      setError("Analysis failed. Please check your internet connection or try a smaller image.");
     } finally {
       setAnalyzing(false);
     }
   };
 
   const fetchImagesInParallel = async (dishes: Dish[]) => {
+    // Process in batches if needed, but for <20 items parallel is fine
     dishes.forEach((dish, index) => {
       fetch("/api/search-image", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        // Use the optimized search query from Gemini
         body: JSON.stringify({ query: dish.searchQuery }),
       })
         .then(res => res.json())
