@@ -6,7 +6,7 @@ import { z } from "zod";
 // Initialize OpenAI client
 // In a real scenario, API keys should be in environment variables
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
-const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" }); // Use the latest available Flash model (2.0)
+const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro" }); // Using 2.5 Pro for higher quality/reasoning
 
 // Define the schema for the menu structure
 // This helps the LLM understand what JSON format we expect
@@ -39,29 +39,28 @@ export async function POST(req: Request) {
         const base64Data = rawBase64.replace(/\s/g, "");
 
         const prompt = `
-    You are a "Visual Culinary Curator". 
-    Analyze the provided menu image deeply.
+    You are a "Visual Culinary Curator" and an expert Menu Translator.
+    Analyze the provided menu image deeply. The menu may contain multiple sections (e.g., Tasting Menu, A La Carte).
     
-    1. **Identify the Vibe**: First, intuit the restaurant's type (e.g., Authentic Italian Trattoria, Modern Fusion, Street Food, High-end French).
+    1. **Identify the Context**: Detect if this is a "Set Menu" (Degustación), "A La Carte", or specific section.
     2. **Extract & Translate**: Extract dish names and descriptions. Translate them into Appetizing Japanese.
-    3. **Visualize (Search Query Engineering)**: This is the most crucial part.
-       For each dish, generate a specific English search query for Google Images.
-       
-       **Rules for Search Query:**
-       - INJECT CONTEXT: Do not just output the dish name. Add the cuisine style or visual cues.
-       - OPTIMIZE FOR APPEARANCE: key words like "delicious", "restaurant plated", "professional photography", "close up".
-       - AVOID GENERIC: If the dish is "Steak", but the menu is Japanese, query for "Wagyu Steak Teppanyaki style plated".
+       - If it's a course menu, keep the order.
+       - If it's a list of ingredients (e.g. for a salad), describe what it is.
+    3. **Visualize (Search Query Engineering)**: 
+       - For each dish, generate a specific English search query for Google Images.
+       - INJECT CONTEXT: "Spanish tapas style", "Fine dining plating", "Rustic presentation".
+       - OPTIMIZE: "delicious", "professional photography", "4k".
     
-    Output JSON format only:
+    Output JSON format only (valid JSON, no markdown code blocks):
     {
-      "restaurant_vibe": "Brief description of the restaurant style inferred",
+      "restaurant_vibe": "Brief description (e.g., Traditional Spanish Taberna, Modern Fusion)",
       "dishes": [
         {
-          "originalName": "String",
-          "translatedName": "String (Japanese)",
-          "description": "String (Japanese, make it sound tasty)",
-          "price": "String (optional)",
-          "searchQuery": "String (The highly optimized English search query)"
+          "originalName": "String (The specific dish name)",
+          "translatedName": "String (Japanese translation)",
+          "description": "String (Japanese description of ingredients/style)",
+          "price": "String (optional, e.g. '53.00€ per person' if it's a set)",
+          "searchQuery": "String (Optimized English search query)"
         }
       ]
     }
