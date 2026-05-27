@@ -1,0 +1,37 @@
+# Nomameshi
+
+> Your local meal companion. Photograph a foreign-language menu and an AI translates it with cuisine context, generates a table-spread visualization, and surfaces country-specific food culture tips. For slow nomads who want to eat where locals eat.
+
+## What this is
+
+Nomameshi (のまめし) is an iOS + web app for travelers who prefer neighborhood taverns over tourist restaurants. It pairs OCR-grade menu translation with food-culture context so the entire "waiting for your meal" experience becomes enjoyable.
+
+- Frontend: Next.js 16 + React 19 + TypeScript
+- AI (translation): Gemini 2.5 Flash (`gemini-2.5-flash`)
+- AI (image): Gemini 2.5 Flash Image (`gemini-2.5-flash-image`)
+- Mobile: Capacitor 8 (iOS)
+- Hosting: Vercel (SSR + serverless API routes)
+- Design: Pencil.dev (`design/nomameshi.pen`)
+
+API keys are server-only; clients never see them. IP-based rate limiting (10 req/min). Translation history kept in localStorage (max 20 entries — a lightweight travel log).
+
+## Where to start
+
+- [README](https://github.com/DELAxGithub/nomameshi/blob/main/README.md) — features, stack, getting started
+- [docs/](https://github.com/DELAxGithub/nomameshi/tree/main/docs) — design brief, design tokens, architecture
+- [src/](https://github.com/DELAxGithub/nomameshi/tree/main/src) — Next.js app source
+- [ios/](https://github.com/DELAxGithub/nomameshi/tree/main/ios) — Capacitor iOS shell
+- [CLAUDE.md](https://github.com/DELAxGithub/nomameshi/blob/main/CLAUDE.md) — project memory for AI agents
+
+## Audience
+
+- Slow nomads (multi-week / multi-month overseas stays)
+- Travelers who prefer local cafeterias, bars, taverns over chain restaurants
+- People treating "menu translation" as a daily-life tool, not a travel utility
+
+## What this is NOT
+
+- Not a phrasebook or general-purpose translator — it specializes in food/menu context
+- Not a restaurant discovery service — bring your own restaurant, the app helps you order
+- Not an Android app (currently) — iOS via Capacitor + web via Vercel
+- Not a calorie or nutrition tracker — see [tonton](https://github.com/DELAxGithub/tonton) for that
